@@ -120,8 +120,8 @@ def example(response: Response):
 
 
 # Запуск
-1. `git clone git@github.com:XDKAY/FastAPICourseLesson12.git`
-2. `cd FastAPICourseLesson12`
+1. `git clone git@github.com:XDKAY/FastAPICourseLesson13.git`
+2. `cd FastAPICourseLesson13`
 3. `uv venv`
 4. `source .venv/bin/activate`
 5. `uv sync`
