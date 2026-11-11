@@ -10,8 +10,6 @@ from .user_service import UserServiceDep
 __all__ = ("CurrentUserDep", )
 
 
-SessionTokenDep = Annotated[Optional[str], Cookie()]
-
 def get_current_user(
     response: Response,
     user_service: UserServiceDep,
@@ -35,7 +33,20 @@ def get_current_user(
         )
 
     timedelta_ = datetime.now(timezone.utc) - datetime.fromtimestamp(float(last_time), tz=timezone.utc)
+
+    if timedelta_ >= timedelta(minutes=5):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Пользователь не авторизован"
+        )
+
     user_orm = user_service.get_by_id(user_id)
+
+    if not user_orm:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Пользователь не авторизован"
+        )
 
     if timedelta(minutes=3) <= timedelta_ < timedelta(minutes=5):
         value = f"{user_id}.{datetime.now(timezone.utc).timestamp()}"
@@ -44,13 +55,6 @@ def get_current_user(
             value=f"{value}.{signature.generate(value)}",
             max_age=settings.cookie.max_age,
             httponly=settings.cookie.httponly
-        )
-
-    elif timedelta_ >= timedelta(minutes=5):
-        response.delete_cookie(key="session_token")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Пользователь не авторизован"
         )
 
     return UserResponseScheme.model_validate(user_orm)
